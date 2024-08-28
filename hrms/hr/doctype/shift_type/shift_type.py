@@ -16,6 +16,7 @@ from hrms.hr.doctype.attendance.attendance import mark_attendance
 from hrms.hr.doctype.employee_checkin.employee_checkin import (
 	calculate_working_hours,
 	mark_attendance_and_link_log,
+	time_diff_in_hours,
 )
 from hrms.hr.doctype.shift_assignment.shift_assignment import get_employee_shift, get_shift_details
 from hrms.utils import get_date_range
@@ -25,6 +26,11 @@ EMPLOYEE_CHUNK_SIZE = 50
 
 
 class ShiftType(Document):
+	def before_save(self):
+		self.custom_shift_working_hours = time_diff_in_hours(
+			datetime.strptime(self.start_time, "%H:%M:%S"),
+			datetime.strptime(self.end_time, "%H:%M:%S")
+		)
 	@frappe.whitelist()
 	def process_auto_attendance(self):
 		if (
@@ -63,6 +69,7 @@ class ShiftType(Document):
 				in_time,
 				out_time,
 				self.name,
+				self.custom_shift_working_hours,
 			)
 
 		# commit after processing checkin logs to avoid losing progress

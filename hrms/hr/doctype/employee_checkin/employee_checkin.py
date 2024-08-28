@@ -6,6 +6,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, get_datetime
+from datetime import datetime, timedelta
 
 from hrms.hr.doctype.shift_assignment.shift_assignment import (
 	get_actual_start_end_datetime_of_shift,
@@ -121,6 +122,7 @@ def mark_attendance_and_link_log(
 	in_time=None,
 	out_time=None,
 	shift=None,
+	custom_shift_working_hours=None,
 ):
 	"""Creates an attendance and links the attendance to the Employee Checkin.
 	Note: If attendance is already present for the given date, the logs are marked as skipped and no exception is thrown.
@@ -132,6 +134,10 @@ def mark_attendance_and_link_log(
 	"""
 	log_names = [x.name for x in logs]
 	employee = logs[0].employee
+	if working_hours > custom_shift_working_hours:
+		custom_overtime_hours = working_hours - custom_shift_working_hours
+	else:
+		custom_overtime_hours = 0
 
 	if attendance_status == "Skip":
 		skip_attendance_in_checkins(log_names)
@@ -153,6 +159,8 @@ def mark_attendance_and_link_log(
 					"early_exit": early_exit,
 					"in_time": in_time,
 					"out_time": out_time,
+					"custom_shift_hour_as_per_shift": custom_shift_working_hours,
+					"custom_overtime_hours": custom_overtime_hours,
 				}
 			).submit()
 
@@ -233,7 +241,10 @@ def calculate_working_hours(logs, check_in_out_type, working_hours_calc_type):
 
 
 def time_diff_in_hours(start, end):
-	return round(float((end - start).total_seconds()) / 3600, 2)
+    # If end time is earlier than start time, it means the shift ends the next day
+    if end < start:
+        end += timedelta(days=1)
+    return round(float((end - start).total_seconds()) / 3600, 2)
 
 
 def find_index_in_dict(dict_list, key, value):
