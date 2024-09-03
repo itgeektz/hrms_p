@@ -25,6 +25,7 @@ class SalaryStructureAssignment(Document):
 		self.validate_company()
 		self.validate_income_tax_slab()
 		self.set_payroll_payable_account()
+		self.set_gross_salary()
 
 		if self.earning_and_deduction_entries_does_not_exists():
 			if not self.taxable_earnings_till_date and not self.tax_deducted_till_date:
@@ -48,7 +49,20 @@ class SalaryStructureAssignment(Document):
 			self.set_payroll_cost_centers()
 
 		self.validate_cost_center_distribution()
-
+	def set_gross_salary(self):
+		self.gross_salary = self.base + self.transport_allowance + self.meal_allowance + self.incentives
+		self.nssf_deduction = self.gross_salary * 0.1
+		taxable_amount = self.gross_salary - ( self.nssf_deduction)
+		employment_type = frappe.get_cached_value("Employee",self.employee,"employement type")
+		
+		tax_payable = (((taxable_amount - 270000) * 0.08) if (taxable_amount >= 270000) and (taxable_amount < 520000) 
+		else ((taxable_amount - 520000) * 0.2) + 20000 if (taxable_amount >= 520000) and (taxable_amount < 760000)
+		else ((taxable_amount - 760000) * 0.25) + 68000 if (taxable_amount >= 760000) and (taxable_amount < 1000000)
+		else ((taxable_amount - 1000000) * 0.3) + 128000 if (taxable_amount >= 1000000)
+		else taxable_amount * 0.3 if employment_type == 'Secondary' 
+		else 120
+		)	
+		self.net_pay = taxable_amount - tax_payable
 	def validate_dates(self):
 		joining_date, relieving_date = frappe.db.get_value(
 			"Employee", self.employee, ["date_of_joining", "relieving_date"]
