@@ -36,6 +36,7 @@ class ShiftRequest(Document):
 			assignment_doc.shift_type = self.shift_type
 			assignment_doc.employee = self.employee
 			assignment_doc.start_date = self.from_date
+			assignment_doc.custom_area_assigned = self.custom_area_assigned
 			if self.to_date:
 				assignment_doc.end_date = self.to_date
 			assignment_doc.shift_request = self.name

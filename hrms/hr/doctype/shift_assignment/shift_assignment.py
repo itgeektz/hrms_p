@@ -410,17 +410,14 @@ def get_employee_shift(
 		for_timestamp = now_datetime()
 
 	shift_details = get_shift_for_timestamp(employee, for_timestamp)
-
 	# if shift assignment is not found, consider default shift
 	if for_timestamp.weekday() != 5:
 		default_shift = frappe.db.get_value("Employee", employee, "default_shift", cache=True)
-	
 	if for_timestamp.weekday() == 5:
         # Handle the shift for Saturday specifically
 		default_shift = frappe.db.get_value("Employee", employee, "saturday_shift", cache=True)
 	if not shift_details and consider_default_shift:
 		shift_details = get_shift_details(default_shift, for_timestamp)
-
 	# if no shift is found, find next or prev shift assignment based on direction
 	if not shift_details and next_shift_direction:
 		shift_details = get_prev_or_next_shift(

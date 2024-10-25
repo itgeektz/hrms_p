@@ -1911,6 +1911,9 @@ class SalarySlip(TransactionBase):
 			self.mode_of_payment = emp.salary_mode
 			self.bank_name = emp.bank_name
 			self.bank_account_no = emp.bank_ac_no
+			self.salary_structure_assignment = frappe.get_list("Salary Structure Assignment",
+													  filters={"salary_structure": self.salary_structure,"employee": self.employee, "docstatus": 1},
+													  pluck="name")[0]
 
 	@frappe.whitelist()
 	def process_salary_based_on_working_days(self):

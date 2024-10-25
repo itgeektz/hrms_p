@@ -60,7 +60,7 @@ class SalaryStructureAssignment(Document):
 		else ((taxable_amount - 760000) * 0.25) + 68000 if (taxable_amount >= 760000) and (taxable_amount < 1000000)
 		else ((taxable_amount - 1000000) * 0.3) + 128000 if (taxable_amount >= 1000000)
 		else taxable_amount * 0.3 if employment_type == 'Secondary' 
-		else 120
+		else 0
 		)	
 		self.net_pay = taxable_amount - tax_payable
 	def validate_dates(self):

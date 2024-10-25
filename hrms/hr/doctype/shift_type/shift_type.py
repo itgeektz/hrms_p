@@ -74,7 +74,27 @@ class ShiftType(Document):
 
 		# commit after processing checkin logs to avoid losing progress
 		frappe.db.commit()  # nosemgrep
-
+		if self.name in ['DO','NO','PH']:
+			shift_assignments = self.get_shift_assignments()
+			for key,group in itertools.groupby(shift_assignments, key=lambda x: (x["employee"],x["start_date"])):
+				employee=key[0]
+				status = frappe.get_cached_value("Employee",employee,"status")
+				if status != "Active":
+					continue
+				attendance_date = key[1]
+				today = datetime.today().date()
+				#tomorrow = today + timedelta(days=1)
+				joining_date = frappe.get_cached_value("Employee",employee,"date_of_joining")
+				if attendance_date < joining_date or attendance_date > today:
+					continue
+				if frappe.db.exists("Attendance", {"employee": employee, "attendance_date": attendance_date}):
+					continue
+				if self.name == 'DO':
+					mark_attendance(employee,attendance_date,"Day Off","DO")
+				if self.name == 'PH':
+					mark_attendance(employee,attendance_date,"PH or Comp Off","PH")
+				if self.name == 'NO':
+					mark_attendance(employee,attendance_date,"Night Off","NO")
 		assigned_employees = self.get_assigned_employees(self.process_attendance_after, True)
 
 		# mark absent in batches & commit to avoid losing progress since this tries to process remaining attendance
@@ -110,6 +130,23 @@ class ShiftType(Document):
 			order_by="employee,time",
 		)
 
+	def get_shift_assignments(self) -> list[dict]:
+		return frappe.get_all(
+			"Shift Assignment",
+			fields=[
+				"name",
+				"employee",
+				"shift_type",
+				"start_date",
+				"end_date",
+			],
+			filters={
+				"start_date": (">=", self.process_attendance_after),
+				"shift_type": ["in",["DO","NO","PH"]],
+				"status": "Active",
+			},
+			order_by="employee,start_date",
+		)
 	def get_attendance(self, logs):
 		"""Return attendance_status, working_hours, late_entry, early_exit, in_time, out_time
 		for a set of logs belonging to a single shift.
@@ -159,7 +196,6 @@ class ShiftType(Document):
 		for date in dates:
 			timestamp = datetime.combine(date, start_time)
 			shift_details = get_employee_shift(employee, timestamp, True)
-
 			if shift_details and shift_details.shift_type.name == self.name:
 				attendance = mark_attendance(employee, date, "Absent", self.name)
 

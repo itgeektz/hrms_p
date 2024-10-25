@@ -32,7 +32,7 @@ class Attendance(Document):
 	def validate(self):
 		from erpnext.controllers.status_updater import validate_status
 
-		validate_status(self.status, ["Present", "Absent", "On Leave", "Half Day", "Work From Home"])
+		validate_status(self.status, ["Present", "Absent", "On Leave", "Half Day", "Work From Home", "Weekly Off", "Day Off", "PH or Comp Off", "Night Off", "Annual Leave", "Unpaid Leave", "Sick Leave"])
 		validate_active_employee(self.employee)
 		self.validate_attendance_date()
 		self.validate_duplicate_record()
