@@ -171,6 +171,9 @@ doc_events = {
 		"validate": "hrms.controllers.employee_boarding_controller.update_employee_boarding_status"
 	},
 	"Task": {"on_update": "hrms.controllers.employee_boarding_controller.update_task"},
+    "Salary Structure Assignment": {
+        "on_cancel": "hrms.hrms_api.custom_before_cancel"
+    },
 }
 
 # Scheduled Tasks
@@ -266,7 +269,7 @@ override_doctype_dashboards = {
 
 # exempt linked doctypes from being automatically cancelled
 #
-# auto_cancel_exempted_doctypes = ["Auto Repeat"]
+auto_cancel_exempted_doctypes = ["Salary Slip"]
 
 
 # User Data Protection
