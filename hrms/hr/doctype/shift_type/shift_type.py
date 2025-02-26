@@ -197,6 +197,8 @@ class ShiftType(Document):
 			timestamp = datetime.combine(date, start_time)
 			shift_details = get_employee_shift(employee, timestamp, True)
 			if shift_details and shift_details.shift_type.name == self.name:
+				if frappe.db.exists("Attendance", {"employee": employee, "attendance_date": date}):
+					continue
 				attendance = mark_attendance(employee, date, "Absent", self.name)
 
 				if not attendance:
